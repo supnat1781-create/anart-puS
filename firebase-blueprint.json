@@ -1,0 +1,90 @@
+{
+  "entities": {
+    "Account": {
+      "title": "Trading Account",
+      "description": "A brokerage account or trading platform account tracked in the portfolio.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The UID of the owner." },
+        "name": { "type": "string", "description": "Account name (e.g., XM, IUX)." },
+        "platform": { "type": "string", "description": "Platform name." },
+        "currency": { "type": "string", "description": "Base currency (e.g., USD)." },
+        "balance": { "type": "number", "description": "Current balance." },
+        "initialBalance": { "type": "number", "description": "Starting balance." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "balance"]
+    },
+    "Trade": {
+      "title": "Trade Listing",
+      "description": "Details of a specific trade execution.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The UID of the owner." },
+        "accountId": { "type": "string", "description": "The ID of the account this trade belongs to." },
+        "asset": { "type": "string", "description": "Symbol (e.g., BTC/USD, XAU/USD)." },
+        "type": { "type": "string", "enum": ["Buy", "Sell"] },
+        "entryPrice": { "type": "number" },
+        "exitPrice": { "type": "number" },
+        "stopLoss": { "type": "number" },
+        "takeProfit": { "type": "number" },
+        "lotSize": { "type": "number" },
+        "pnl": { "type": "number", "description": "Profit or Loss value." },
+        "pnlPercentage": { "type": "number" },
+        "riskRewardRatio": { "type": "number" },
+        "status": { "type": "string", "enum": ["Open", "Closed"] },
+        "entryTime": { "type": "string", "format": "date-time" },
+        "exitTime": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "accountId", "asset", "type", "entryPrice"]
+    },
+    "JournalEntry": {
+      "title": "Trade Journal",
+      "description": "Qualitative data and reasoning for a trade.",
+      "type": "object",
+      "properties": {
+        "tradeId": { "type": "string", "description": "The ID of the associated trade." },
+        "userId": { "type": "string", "description": "The UID of the owner." },
+        "notes": { "type": "string" },
+        "emotion": { "type": "string", "description": "Confident, Fearful, FOMO, etc." },
+        "mistakes": { "type": "array", "items": { "type": "string" } },
+        "strategy": { "type": "string" },
+        "imageUrl": { "type": "string", "description": "Cloud storage URL for chart screenshot." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tradeId", "userId"]
+    },
+    "Transaction": {
+      "title": "Account Transaction",
+      "description": "Deposit or withdrawal records.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "accountId": { "type": "string" },
+        "type": { "type": "string", "enum": ["Deposit", "Withdrawal"] },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "accountId", "type", "amount"]
+    }
+  },
+  "firestore": {
+    "/accounts/{accountId}": {
+      "schema": "Account",
+      "description": "User trading accounts."
+    },
+    "/trades/{tradeId}": {
+      "schema": "Trade",
+      "description": "User trade executions."
+    },
+    "/journalEntries/{entryId}": {
+      "schema": "JournalEntry",
+      "description": "Journaling data for trades."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Deposit/Withdrawal history."
+    }
+  }
+}

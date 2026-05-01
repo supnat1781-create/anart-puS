@@ -1,0 +1,11 @@
+{
+  "name": "NexusTrade",
+  "description": "Professional-grade trading journal and portfolio performance tracker with AI-driven insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "trading_journal",
+    "portfolio_management",
+    "performance_analytics",
+    "ai_insights"
+  ]
+}

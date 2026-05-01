@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Accounts ---
+    match /accounts/{accountId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(incoming().userId) 
+                    && incoming().balance is number
+                    && incoming().name is string && incoming().name.size() <= 100;
+      allow update: if isOwner(resource.data.userId) 
+                    && incoming().userId == existing().userId
+                    && incoming().balance is number;
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // --- Trades ---
+    match /trades/{tradeId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(incoming().userId)
+                    && incoming().asset is string && incoming().asset.size() <= 20
+                    && incoming().type in ["Buy", "Sell"]
+                    && incoming().entryPrice is number;
+      allow update: if isOwner(resource.data.userId)
+                    && incoming().userId == existing().userId
+                    && (
+                      // Only allow specific updates like closing a trade or adding metadata
+                      incoming().diff(existing()).affectedKeys().hasAny(['exitPrice', 'exitTime', 'status', 'pnl', 'pnlPercentage', 'riskRewardRatio'])
+                    );
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // --- Journal Entries ---
+    match /journalEntries/{entryId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(incoming().userId)
+                    && isValidId(incoming().tradeId);
+      allow update: if isOwner(resource.data.userId)
+                    && incoming().userId == existing().userId;
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // --- Transactions ---
+    match /transactions/{transactionId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(incoming().userId)
+                    && incoming().type in ["Deposit", "Withdrawal"]
+                    && incoming().amount is number;
+      allow delete: if isOwner(resource.data.userId);
+    }
+  }
+}
